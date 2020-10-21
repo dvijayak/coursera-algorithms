@@ -110,7 +110,7 @@ string multiply (string const& x, string const& y)
 
   // Pad up to the next power of 2
   string x_padded = x;
-  int zerosToPadForPow2 = int(pow(2, round(log2(length_x)))) - length_x;
+  int zerosToPadForPow2 = int(pow(2, ceil(log2(length_x)))) - length_x;
   padZeroPrefix(x_padded, zerosToPadForPow2);
   string y_padded = y;
   padZeroPrefix(y_padded, x_padded.length() - length_y);
@@ -137,10 +137,13 @@ int main() {
     { {"2", "10"}, "20"},
     { {"10", "3"}, "30"},
     { {"3", "10"}, "30"},
+    { {"123", "876"}, "107748"},
     { {"1054", "231"}, "243474"},
     { {"1234", "5678"}, "7006652"},
     { {"5678", "1234"}, "7006652"},
+    { {"10000", "22222"}, "222220000"},
     { {"1950293", "529503"}, "1032685994379"},
+    { {"12345", "87654"}, "1082088630"},
     { {"12345678", "87654"}, "1082148059412"},
   };
   
