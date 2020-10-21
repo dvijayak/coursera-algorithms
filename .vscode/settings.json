@@ -1,8 +1,8 @@
 {
-   "code-runner.executorMap": {
-      "cpp": "clang++ --std=c++11 $fullFileName && ./a.out"
-   },
-   "files.associations": {
-      "vector": "cpp"
-   }
+  "code-runner.executorMap": {
+    "cpp": "cd $dir && clang++ --std=c++17 $fullFileName && ./a.out"
+  },
+  "files.associations": {
+    "vector": "cpp"
+  }
 }
