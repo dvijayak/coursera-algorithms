@@ -7,17 +7,17 @@
 
 using namespace std;
 
-int ctoi (char c)
+int ctoi(char c)
 {
   return c - '0';
 }
 
-char itoc (int i)
+char itoc(int i)
 {
-  return '0' + i;  
+  return '0' + i;
 }
 
-string add (string const& a, string const& b)
+string add(string const &a, string const &b)
 {
   int length_a = a.length();
   int length_b = b.length();
@@ -26,7 +26,7 @@ string add (string const& a, string const& b)
 
   vector<char> result;
   int carry = 0;
-  for (int i_a = length_a-1, i_b = length_b-1; i_a >= 0; --i_a, --i_b)
+  for (int i_a = length_a - 1, i_b = length_b - 1; i_a >= 0; --i_a, --i_b)
   {
     int v_a = ctoi(a[i_a]);
     int v = carry + v_a;
@@ -36,10 +36,14 @@ string add (string const& a, string const& b)
       v += v_b;
     }
 
-    carry = v/10;
-    int digit = v - carry*10;
+    carry = v / 10;
+    int digit = v - carry * 10;
     result.push_back(itoc(digit));
-  }  
+  }
+  if (carry > 0)
+  {
+    result.push_back(itoc(carry));
+  }
 
   stringstream ss;
   for (auto it = result.rbegin(); it != result.rend(); ++it)
@@ -47,7 +51,7 @@ string add (string const& a, string const& b)
   return ss.str();
 }
 
-void padZero (string & s, int const n)
+void padZero(string &s, int const n)
 {
   if (n <= 0)
     return;
@@ -56,7 +60,7 @@ void padZero (string & s, int const n)
     s.push_back('0');
 }
 
-void padZeroPrefix (string & s, int const n)
+void padZeroPrefix(string &s, int const n)
 {
   if (n <= 0)
     return;
@@ -65,7 +69,7 @@ void padZeroPrefix (string & s, int const n)
     s.insert(s.begin(), '0');
 }
 
-string multiplyNumbersOfSameLengthPow2 (string const& x, string const& y)
+string multiplyNumbersOfSameLengthPow2(string const &x, string const &y)
 {
   int n = x.length();
 
@@ -97,10 +101,11 @@ string multiplyNumbersOfSameLengthPow2 (string const& x, string const& y)
   padZero(ad_plus_bc, n2);
 
   // Add
-  return add(ac, add(ad_plus_bc, bd));  
+  string done = add(ac, add(ad_plus_bc, bd));
+  return done;
 }
 
-string multiply (string const& x, string const& y)
+string multiply(string const &x, string const &y)
 {
   int length_x = x.length();
   int length_y = y.length();
@@ -127,32 +132,35 @@ string multiply (string const& x, string const& y)
       break;
   }
   return result.substr(unpaddedStart, string::npos);
-} 
+}
 
-int main() {
+int main()
+{
   map<pair<string, string>, string> testCases = {
-    { {"2", "2"}, "4"},
-    { {"3", "4"}, "12"},
-    { {"9", "3"}, "27"},
-    { {"2", "10"}, "20"},
-    { {"10", "3"}, "30"},
-    { {"3", "10"}, "30"},
-    { {"123", "876"}, "107748"},
-    { {"1054", "231"}, "243474"},
-    { {"1234", "5678"}, "7006652"},
-    { {"5678", "1234"}, "7006652"},
-    { {"10000", "22222"}, "222220000"},
-    { {"1950293", "529503"}, "1032685994379"},
-    { {"12345", "87654"}, "1082088630"},
-    { {"12345678", "87654"}, "1082148059412"},
+      {{"2", "2"}, "4"},
+      {{"3", "4"}, "12"},
+      {{"9", "3"}, "27"},
+      {{"2", "10"}, "20"},
+      {{"10", "3"}, "30"},
+      {{"3", "10"}, "30"},
+      {{"78", "76"}, "5928"},
+      {{"123", "876"}, "107748"},
+      {{"1054", "231"}, "243474"},
+      {{"1234", "5678"}, "7006652"},
+      {{"5678", "1234"}, "7006652"},
+      {{"5678", "7654"}, "43459412"},
+      {{"10000", "22222"}, "222220000"},
+      {{"1950293", "529503"}, "1032685994379"},
+      {{"12345", "87654"}, "1082088630"},
+      {{"12345678", "87654"}, "1082148059412"},
   };
-  
-  for (auto const& testCase : testCases)
+
+  for (auto const &testCase : testCases)
   {
-    string const& a = testCase.first.first;
-    string const& b = testCase.first.second;
+    string const &a = testCase.first.first;
+    string const &b = testCase.first.second;
     string result = multiply(a, b);
-    string const& expected = testCase.second;
+    string const &expected = testCase.second;
     bool success = result == expected;
     cout << a << " * " << b << " = " << result << (success ? "" : " (FAIL! ");
     if (!success)
@@ -160,7 +168,7 @@ int main() {
     cout << endl;
   }
 
-  // Assignment question  
+  // Assignment question
   {
     string x = "3141592653589793238462643383279502884197169399375105820974944592";
     string y = "2718281828459045235360287471352662497757247093699959574966967627";
