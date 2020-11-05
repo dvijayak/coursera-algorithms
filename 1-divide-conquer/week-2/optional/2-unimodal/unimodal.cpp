@@ -60,7 +60,7 @@ int findMaxFromUnimodal(vector<int> const &v, int s, int e) // s is included, e 
    if (left >= 0 && v[left] > v[mid]) // slope is decreasing towards the right, so climb upwards to the left
       return findMaxFromUnimodal(v, s, mid);
    else if (right < v.size() && v[right] > v[mid]) // slope is increasing towards the right, so keep climbing upwards to the right
-      return findMaxFromUnimodal(v, mid, e);
+      return findMaxFromUnimodal(v, right, e);
    else // we are at the peak since both the left and the right values are smaller
       return v[mid];
 }
