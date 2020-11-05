@@ -3,6 +3,7 @@
     "cpp": "cd $dir && clang++ --std=c++17 $fullFileName && ./a.out"
   },
   "files.associations": {
-    "vector": "cpp"
+    "vector": "cpp",
+    "iosfwd": "cpp"
   }
 }
