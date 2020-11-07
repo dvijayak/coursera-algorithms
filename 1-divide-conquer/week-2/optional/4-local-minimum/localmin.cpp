@@ -18,6 +18,7 @@
 
 using namespace std;
 
+#pragma region Utilities
 template <typename T>
 ostream &operator<<(ostream &os, vector<T> const &v)
 {
@@ -73,6 +74,20 @@ set<int> verify(vector<int> const &matrix, int actual)
 
    return expected;
 }
+#pragma endregion
+
+#pragma region Helpers for the algorithm
+struct Cell
+{
+   int row;
+   int col;
+   int min;
+
+   bool operator< (Cell const& other) const
+   {
+      return min < other.min;
+   }
+};
 
 // Convert a 2D index to a 1D index
 int index(int row, int col, int n)
@@ -80,18 +95,41 @@ int index(int row, int col, int n)
    return row*n + col;
 }
 
-bool isOutOfBounds(int row, int col, int row_bound_start, int row_bound_end, int col_bound_start, int col_bound_end) // start and end are always INCLUSIVE here
+Cell computeGlobalMinimum(int row_start, int row_end, int col_start, int col_end, vector<int> const& matrix, int matrix_dimension)
 {
-   if (
-      min(row, row_bound_start) < row_bound_start || max(row, row_bound_end) > row_bound_end ||
-      min(col, col_bound_start) < col_bound_start || max(col, col_bound_end) > col_bound_end
-      )
+   Cell result;
+   result.row = row_start;
+   result.col = col_start;
+   result.min = numeric_limits<int>::max();
+   for (int i = row_start; i <= row_end; ++i)
    {
-      return true;
-   }
+      if (i < 0 || i >= matrix_dimension)
+         continue;
 
-   return false;
+      for (int j = col_start; j <= col_end; ++j)
+      {
+         if (j < 0 || j >= matrix_dimension)
+            continue;
+
+         int cell = matrix[index(i, j, matrix_dimension)];
+         if (cell < result.min)
+         {
+            result.row = i;
+            result.col = j;
+            result.min = cell;
+         }
+      }
+   }
+   return result;
 }
+
+bool isWithinRange(Cell const& cell, int row_start, int row_end, int col_start, int col_end)
+{
+   int row = cell.row;
+   int col = cell.col;
+   return row_start <= row && row <= row_end && col_start <= col && col <= col_end;
+}
+#pragma endregion
 
 /**
  * Our target is O(n) comparisons. Plugging this into the Master Method, we would need a < b and d = 1. So if a = 2, then as long as b > 3, we will meet our target.
@@ -134,124 +172,133 @@ bool isOutOfBounds(int row, int col, int row_bound_start, int row_bound_end, int
  * - So, total number of comparisons < 12*n + 12*n/2 + 12*n/4 + 12*n/8 + ... 12*1 <= 24n = O(n)
  * QED.
  * 
+ * Acknowledgements:
+ * I got some good hints from
+ * - https://www.coursera.org/learn/algorithms-divide-conquer/discussions/forums/-HCDbbpyEeayJw6eqJ0T8g/threads/y36Cyu0jQIe-gsrtI6CHGg
+ * - https://www.coursera.org/learn/algorithms-divide-conquer/discussions/forums/-HCDbbpyEeayJw6eqJ0T8g/threads/hegaBqHfQfCoGgah38HwTg
+ * The following served as good thinking aids to fully reason out the proof of correctness as well as the running time analysis
+ * - https://stackoverflow.com/a/24461101
+ * - http://courses.csail.mit.edu/6.006/spring11/lectures/lec02.pdf
  */
-
-struct MinResult
-{
-   int row;
-   int col;
-   int min;
-};
-
-MinResult computeGlobalMinimum(int row_start, int row_end, int col_start, int col_end, vector<int> const& matrix, int matrix_dimension)
-{
-   MinResult result;
-   result.row = row_start;
-   result.col = col_start;
-   result.min = numeric_limits<int>::max();
-   for (int i = row_start; i <= row_end; ++i)
-   {
-      if (i < 0 || i >= matrix_dimension)
-         continue;
-
-      for (int j = col_start; j <= col_end; ++j)
-      {
-         if (j < 0 || j >= matrix_dimension)
-            continue;
-
-         int cell = matrix[index(i, j, matrix_dimension)];
-         if (cell < result.min)
-         {
-            result.row = i;
-            result.col = j;
-            result.min = cell;
-         }
-      }
-   }
-   return result;
-}
-
 int computeLocalMinimum(int row_start, int row_end, int col_start, int col_end, vector<int> const& matrix, int matrix_dimension) // starts and ends are all INCLUSIVE
 {
    int submatrix_row_start = row_start + 1;
-   int submatrix_row_end = row_end;
+   int submatrix_row_end = row_end - 1;
    int submatrix_col_start = col_start + 1;
-   int submatrix_col_end = col_end;
+   int submatrix_col_end = col_end - 1;
 
    int n = submatrix_row_end - submatrix_row_start + 1;
 
+   // Base case
    if (n == 1)
    {
-      // Base case
       int i = row_start + 1;
       int j = col_start + 1;
       return matrix[index(i, j, matrix_dimension)];
    }
-   else
+   // Else, Conquer first, then divide
+
+   // Compute global minimum element of the "window"
+   vector<Cell> window;
+   // Boundary surrounding the (sub)matrix
+   window.push_back(computeGlobalMinimum(row_start, row_end, col_start, col_start, matrix, matrix_dimension));
+   window.push_back(computeGlobalMinimum(row_start, row_end, col_end, col_end, matrix, matrix_dimension));
+   window.push_back(computeGlobalMinimum(row_start, row_start, col_start, col_end, matrix, matrix_dimension));
+   window.push_back(computeGlobalMinimum(row_end, row_end, col_start, col_end, matrix, matrix_dimension));
+   // Cross-section of the middle row and column
+   int row_mid = row_start + 1 + n/2;
+   int col_mid = col_start + 1 + n/2;
+   window.push_back(computeGlobalMinimum(row_start, row_end, row_mid, row_mid, matrix, matrix_dimension));
+   window.push_back(computeGlobalMinimum(row_mid, row_mid, col_start, col_end, matrix, matrix_dimension));
+
+   auto min_result = window[0];
+   for (int k = 1; k < window.size(); ++k)
    {
-      // Conquer first, then divide
+      if (window[k] < min_result)
+         min_result = window[k];
+   }
 
-      // Compute window of the global minimum
-      // First, check boundary
-      auto min_result = computeGlobalMinimum(row_start, row_end, col_start, col_start, matrix, matrix_dimension);
+   // Find the smallest neighbor (some repeated work, but to keep the code simple, just blindly check all neighbors even though in some cases you DON'T need to check some of them due to the definition of the global minimum)
+   vector<Cell> neighbors;
+   Cell smallestNeighbor = min_result;
+   int row_up = min_result.row - 1;
+   int row_down = min_result.row + 1;
+   int col_left = min_result.col - 1;
+   int col_right = min_result.col + 1;
+   if (row_up >= submatrix_row_start)
+      neighbors.push_back({ row_up, smallestNeighbor.col, matrix[index(row_up, smallestNeighbor.col, matrix_dimension)] });
+   if (row_down <= submatrix_row_end)
+      neighbors.push_back({ row_down, smallestNeighbor.col, matrix[index(row_down, smallestNeighbor.col, matrix_dimension)] });
+   if (col_left >= submatrix_col_start)
+      neighbors.push_back({ smallestNeighbor.row, col_left, matrix[index(smallestNeighbor.row, col_left, matrix_dimension)] });
+   if (col_right <= submatrix_col_end)
+      neighbors.push_back({ smallestNeighbor.row, col_right, matrix[index(smallestNeighbor.row, col_right, matrix_dimension)] });
+   
+   bool foundLocalMinimum = true;
+   for (auto const& neighbor : neighbors)
+   {
+      if (neighbor < smallestNeighbor)
       {
-         auto candidate = computeGlobalMinimum(row_start, row_end, col_end, col_end, matrix, matrix_dimension);
-         if (candidate.min < min_result.min)
-            min_result = candidate;
+         foundLocalMinimum = false;
+         smallestNeighbor = neighbor;
       }
-      {
-         auto candidate = computeGlobalMinimum(row_start, row_start, col_start, col_end, matrix, matrix_dimension);
-         if (candidate.min < min_result.min)
-            min_result = candidate;
-      }
-      {
-         auto candidate = computeGlobalMinimum(row_end, row_end, col_start, col_end, matrix, matrix_dimension);
-         if (candidate.min < min_result.min)
-            min_result = candidate;
-      }
-      // Then check the cross-section
-      int row_mid = row_start + 1 + n/2;
-      int col_mid = col_start + 1 + n/2;
-      {
-         auto candidate = computeGlobalMinimum(row_start, row_end, row_mid, row_mid, matrix, matrix_dimension);
-         if (candidate.min < min_result.min)
-            min_result = candidate;
-      }
-      {
-         auto candidate = computeGlobalMinimum(row_mid, row_mid, col_start, col_end, matrix, matrix_dimension);
-         if (candidate.min < min_result.min)
-            min_result = candidate;
-      }
-      
-      // Pick the smallest neighbour and recurse into the quadrant submatrix that it belongs to
-//  *    - Note that this submatrix will be of size floor(n/2) x floor(n/2), so when partitioning the matrix, if its dimension is even, then all of the quadrants won't necessarily be square. Count this by padding it with infinity until it becomes a square. This extra padding is negligible in the time complexity analysis because it only modifies n by a constant amount of 1.
-      // Some repeated work, but to keep the code simple, just blindly check all neighbors even though in some cases you DON'T need to check some of them due to the definition of the global minimum
-      int row_up = min_result.row - 1;
-      int row_down = min_result.row + 1;
-      int col_left = min_result.col - 1;
-      int col_right = min_result.col + 1;
-      
-      if (row_up >= submatrix_row_start && matrix[index(row_up, min_result.col, matrix_dimension)] < min_result.min)
-      {
-         cout << "up" << endl;
-      }
-      else if (row_down <= submatrix_row_end && matrix[index(row_down, min_result.col, matrix_dimension)] < min_result.min)
-      {
-         cout << "down" << endl;
-      }
-      else if (col_left >= submatrix_col_start && matrix[index(min_result.row, col_left, matrix_dimension)] < min_result.min)
-      {
-         cout << "left" << endl;
-      }
-      else if (col_right <= submatrix_col_end && matrix[index(min_result.row, col_right, matrix_dimension)] < min_result.min)
-      {
-         cout << "right" << endl;
-      }
+   }
 
-      // All clear, we are at a local minimum of the submatrix
+   // All clear, we are at a local minimum of the submatrix
+   if (foundLocalMinimum)
       return min_result.min;
 
+   // Otherwise, recurse into the quadrant submatrix that the smallest neighbor belongs to
+   int n_halved = n/2;
+   // Top Left
+   int row_top_left_start = row_start;
+   int row_top_left_end = row_start + n_halved + 1;
+   int col_top_left_start = col_start;
+   int col_top_left_end = col_top_left_start + n_halved + 1;
+   // Top Right
+   int row_top_right_start = row_top_left_start;
+   int row_top_right_end = row_top_left_end;
+   int col_top_right_start = col_start + n_halved + 1;
+   int col_top_right_end = col_top_right_start + n_halved + 1;
+   // Bottom Right
+   int row_bottom_right_start = col_top_right_start;
+   int row_bottom_right_end = col_top_right_end;
+   int col_bottom_right_start = col_top_right_start;
+   int col_bottom_right_end = col_top_right_end;
+   // Bottom Left
+   int row_bottom_left_start =  row_bottom_right_start;
+   int row_bottom_left_end = row_bottom_right_end;
+   int col_bottom_left_start = col_top_left_start;
+   int col_bottom_left_end = col_top_left_end;
+
+   // Find the right one and jump in
+   int row_final_start = row_top_left_start;
+   int row_final_end = row_top_left_end;
+   int col_final_start = col_top_left_start;
+   int col_final_end = col_top_left_end;
+   if (isWithinRange(smallestNeighbor, row_top_right_start, row_top_right_end, col_top_right_start, col_top_right_end))
+   {
+      row_final_start = row_top_right_start;
+      row_final_end = row_top_right_end;
+      col_final_start = col_top_right_start;
+      col_final_end = col_top_right_end;
    }
+   else if (isWithinRange(smallestNeighbor, row_bottom_right_start, row_bottom_right_end, col_bottom_right_start, col_bottom_right_end))
+   {
+      row_final_start = row_bottom_right_start;
+      row_final_end = row_bottom_right_end;
+      col_final_start = col_bottom_right_start;
+      col_final_end = col_bottom_right_end;
+   }
+   else if (isWithinRange(smallestNeighbor, row_bottom_left_start, row_bottom_left_end, col_bottom_left_start, col_bottom_left_end))
+   {
+      row_final_start = row_bottom_left_start;
+      row_final_end = row_bottom_left_end;
+      col_final_start = col_bottom_left_start;
+      col_final_end = col_bottom_left_end;
+   }
+
+   return computeLocalMinimum(row_final_start, row_final_end, col_final_start, col_final_end, matrix, matrix_dimension);
 }
 
 // Assumes that the given 1D vector consists of distinct numbers that form a square matrix
@@ -286,8 +333,8 @@ int main()
    sort(test_case_files.begin(), test_case_files.end());
 
    // For each case, read the file and compute a local minimum
-   // int const n_start = 1, n = test_case_files.size();
-   int const n_start = 1, n = 1;
+   int const n_start = 1, n = test_case_files.size();
+   // int const n_start = 1, n = 3;
    for (auto it = test_case_files.begin() + n_start - 1; it != test_case_files.begin() + n_start - 1 + n; ++it)
    {
       string const &filename = *it;

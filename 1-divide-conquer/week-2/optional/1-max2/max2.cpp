@@ -1,5 +1,4 @@
-/**
- * 
+/** 
  * You are given as input an unsorted array of n distinct numbers, where n is a power of 2. Give an algorithm that identifies the second-largest number in the array, and that uses at most n + lg(n) - 2n comparisons.
  */
 
@@ -50,6 +49,11 @@ ostream &operator<<(ostream &os, vector<int> const &v)
  * - So, k = lg(n). Thus, the procedure has k - 1 = lg(n) - 1 comparisons.
  * - Putting it all together, the total number of comparisons = n - 1 + lg(n) - 1 = n + lg(n) - 2.
  * QED!
+ * 
+ * Acknowledgements:
+ * Got good hints from
+ * - https://www.coursera.org/learn/algorithms-divide-conquer/discussions/forums/-HCDbbpyEeayJw6eqJ0T8g/threads/hegaBqHfQfCoGgah38HwTg
+ * - https://www.coursera.org/learn/algorithms-divide-conquer/discussions/weeks/2/threads/a1Vay5IPEeeZQBKMOoXdvg/replies/5ifieSO7EeiMeA6rxdO7VA/comments/PA_EViQrEeiaqg5F6uM_rA
  */
 
 struct MaxAndCandidates

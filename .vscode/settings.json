@@ -4,6 +4,8 @@
   },
   "files.associations": {
     "vector": "cpp",
-    "iosfwd": "cpp"
+    "iosfwd": "cpp",
+    "random": "cpp",
+    "limits": "cpp"
   }
 }
