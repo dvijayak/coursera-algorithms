@@ -1,14 +1,16 @@
 {
+   "version": "2.0.0",
    "tasks": [
       {
          "type": "shell",
          "label": "C/C++: g++ build active file",
          "command": "/usr/bin/g++",
          "args": [
+            "--std=c++17",
             "-g",
             "${file}",
             "-o",
-            "${fileDirname}/${fileBasenameNoExtension}"
+            "${fileDirname}/a.out"
          ],
          "options": {
             "cwd": "${workspaceFolder}"
@@ -21,6 +23,5 @@
             "isDefault": true
          }
       }
-   ],
-   "version": "2.0.0"
+   ]
 }

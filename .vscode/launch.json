@@ -2,13 +2,13 @@
   "version":"0.2.0",
   "configurations": [
     {
-      "name": "C++ Launch (LLDB)",
+      "name": "C++ Launch (GDB)",
       "type": "cppdbg",
       "request": "launch",
       "program": "${fileDirname}/a.out",
       "cwd": "${fileDirname}",
       "stopAtEntry": false,
-      "MIMode": "lldb",
+      "MIMode": "gdb",
     }
   ]
 }
