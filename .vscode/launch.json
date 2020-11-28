@@ -1,0 +1,15 @@
+{
+  "version":"0.2.0",
+  "configurations": [
+    {
+      "name": "C++ Launch (LLDB)",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${fileDirname}/a.out",
+      "cwd": "${fileDirname}",
+      "stopAtEntry": false,
+      "MIMode": "lldb",
+    }
+  ]
+}
+ 
